@@ -29,13 +29,6 @@ struct superblock {
 	lba_t d_region_start;
 };
 
-/* layout.c */
-void init_super(struct superblock *sb);
-void dump_super(struct superblock *sb);
-
-/* disk.c */
-int open_disk(const char *path);
-void close_disk(void);
 ssize_t read_blocks(void *buf, size_t count, lba_t lba);
 ssize_t write_blocks(void *buf, size_t count, lba_t lba);
 
