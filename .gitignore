@@ -1,4 +1,6 @@
 ext0
 *.o
 ext0_disk
+test_disk
+test_disk.img
 mnt/
