@@ -4,10 +4,12 @@
 #include <fuse.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include "ext0.h"
 
 static int disk_fd = -1;
+static struct superblock sb;
 
 /* ---------------- Disk I/O ---------------- */
 
@@ -81,6 +83,40 @@ void dump_super(struct superblock *sb) {
 	printf("data blocks     %" PRIu64 "\n", sb->num_data_blocks);
 }
 
+/* ---------------- Format ---------------- */
+
+/*
+ * Lay out a fresh file system: zero both bitmaps so everything is
+ * free, then write the superblock to block 0.
+ */
+void format_disk(void) {
+	char block[BLOCK_SIZE] = {0};
+
+	init_super(&sb);
+	for (lba_t i = sb.i_bitmap_start; i < sb.i_table_start; i++) {
+		write_blocks(block, 1, i);
+	}
+	for (lba_t i = sb.d_bitmap_start; i < sb.d_region_start; i++) {
+		write_blocks(block, 1, i);
+	}
+	memcpy(block, &sb, sizeof(sb));
+	write_blocks(block, 1, 0);
+}
+
+/*
+ * Read the superblock from block 0. If the magic number is wrong the
+ * disk was never formatted, so format it now.
+ */
+void load_super(void) {
+	char block[BLOCK_SIZE];
+
+	read_blocks(block, 1, 0);
+	memcpy(&sb, block, sizeof(sb));
+	if (sb.magic != EXT0_MAGIC) {
+		format_disk();
+	}
+}
+
 /* ---------------- FUSE operations ---------------- */
 
 /*
@@ -91,5 +127,13 @@ static struct fuse_operations ext0_operations = {
 };
 
 int main(int argc, char *argv[]) {
-	return fuse_main(argc, argv, &ext0_operations, NULL);
+	if (open_disk(DISK_PATH) < 0) {
+		perror("open_disk");
+		return 1;
+	}
+	load_super();
+
+	int ret = fuse_main(argc, argv, &ext0_operations, NULL);
+	close_disk();
+	return ret;
 }
