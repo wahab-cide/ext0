@@ -1,5 +1,5 @@
 EXEC = ext0
-OBJS = ext0.o
+OBJS = ext0.o bitmap.o
 
 CC = gcc
 CFLAGS = -g -Og -Wall `pkg-config fuse --cflags`

@@ -29,7 +29,14 @@ struct superblock {
 	lba_t d_region_start;
 };
 
+extern struct superblock sb;
+
 ssize_t read_blocks(void *buf, size_t count, lba_t lba);
 ssize_t write_blocks(void *buf, size_t count, lba_t lba);
+
+int64_t alloc_inode(void);
+void free_inode(uint64_t inum);
+int64_t alloc_block(void);
+void free_block(lba_t lba);
 
 #endif

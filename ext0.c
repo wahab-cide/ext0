@@ -9,7 +9,7 @@
 #include "ext0.h"
 
 static int disk_fd = -1;
-static struct superblock sb;
+struct superblock sb;
 
 /* ---------------- Disk I/O ---------------- */
 
